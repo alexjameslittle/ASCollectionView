@@ -70,8 +70,6 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 
 	public typealias Section = ASTableViewSection<SectionID>
 
-    public typealias BeginScrollCallback = (() -> Void)
-    public typealias DidEndDeceleratingCallback = (() -> Void)
 	public typealias OnScrollCallback = ((_ contentOffset: CGPoint, _ contentSize: CGSize) -> Void)
 	public typealias OnReachedBottomCallback = (() -> Void)
 
@@ -82,8 +80,6 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 
 	// MARK: Private vars set by public modifiers
 
-    private var beginScrollCallback: BeginScrollCallback?
-    private var didEndDeceleratingCallback: DidEndDeceleratingCallback?
 	private var onScrollCallback: OnScrollCallback?
 	private var onReachedBottomCallback: OnReachedBottomCallback?
 
@@ -94,7 +90,7 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 
 	private var onPullToRefresh: ((_ endRefreshing: @escaping (() -> Void)) -> Void)?
 
-    private var canScroll: Bool = true
+    private var blockOverScroll: Bool = false
 	private var alwaysBounce: Bool = false
 	private var animateOnDataRefresh: Bool = true
 
@@ -205,7 +201,7 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 			assignIfChanged(tableView, \.showsVerticalScrollIndicator, newValue: parent.scrollIndicatorEnabled)
 			assignIfChanged(tableView, \.showsHorizontalScrollIndicator, newValue: parent.scrollIndicatorEnabled)
 			assignIfChanged(tableView, \.keyboardDismissMode, newValue: .onDrag)
-            assignIfChanged(tableView, \.isScrollEnabled, newValue: parent.canScroll)
+            assignIfChanged(tableView, \.bounces, newValue: !parent.blockOverScroll)
 
 			let isEditing = parent.editMode?.wrappedValue.isEditing ?? false
 			assignIfChanged(tableView, \.allowsSelection, newValue: isEditing)
@@ -586,19 +582,11 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 			}
 		}
 
-        public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-            parent.beginScrollCallback?()
-        }
-
 		public func scrollViewDidScroll(_ scrollView: UIScrollView)
 		{
 			parent.onScrollCallback?(scrollView.contentOffset, scrollView.contentSizePlusInsets)
 			checkIfReachedBottom(scrollView)
 		}
-
-        public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-            parent.didEndDeceleratingCallback?()
-        }
 
 		var hasAlreadyReachedBottom: Bool = false
 		func checkIfReachedBottom(_ scrollView: UIScrollView)
@@ -632,18 +620,6 @@ protocol ASTableViewCoordinator: AnyObject
 @available(iOS 13.0, *)
 public extension ASTableView
 {
-    func onEndDecelerating(_ onEndDecelerating: @escaping DidEndDeceleratingCallback) -> Self {
-        var this = self
-        this.didEndDeceleratingCallback = onEndDecelerating
-        return this
-    }
-
-    func onBeginScroll(_ onBeginScroll: @escaping BeginScrollCallback) -> Self {
-        var this = self
-        this.beginScrollCallback = onBeginScroll
-        return this
-    }
-
 	/// Set a closure that is called whenever the tableView is scrolled
 	func onScroll(_ onScroll: @escaping OnScrollCallback) -> Self
 	{
@@ -709,9 +685,10 @@ public extension ASTableView
 		return this
 	}
 
-    func canScroll(_ canScroll: Bool = true) -> Self {
+    func blockOverScroll(_ blockOverScroll: Bool = true) -> Self
+    {
         var this = self
-        this.canScroll = canScroll
+        this.blockOverScroll = blockOverScroll
         return this
     }
 }
