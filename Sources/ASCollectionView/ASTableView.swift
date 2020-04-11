@@ -94,7 +94,7 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 
 	private var onPullToRefresh: ((_ endRefreshing: @escaping (() -> Void)) -> Void)?
 
-    private var canScroll: Bool = false
+    private var canScroll: Bool = true
 	private var alwaysBounce: Bool = false
 	private var animateOnDataRefresh: Bool = true
 
