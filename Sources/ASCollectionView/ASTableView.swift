@@ -94,6 +94,7 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 
 	private var onPullToRefresh: ((_ endRefreshing: @escaping (() -> Void)) -> Void)?
 
+    private var canScroll: Bool = false
 	private var alwaysBounce: Bool = false
 	private var animateOnDataRefresh: Bool = true
 
@@ -204,6 +205,7 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 			assignIfChanged(tableView, \.showsVerticalScrollIndicator, newValue: parent.scrollIndicatorEnabled)
 			assignIfChanged(tableView, \.showsHorizontalScrollIndicator, newValue: parent.scrollIndicatorEnabled)
 			assignIfChanged(tableView, \.keyboardDismissMode, newValue: .onDrag)
+            assignIfChanged(tableView, \.isScrollEnabled, newValue: parent.canScroll)
 
 			let isEditing = parent.editMode?.wrappedValue.isEditing ?? false
 			assignIfChanged(tableView, \.allowsSelection, newValue: isEditing)
@@ -706,6 +708,12 @@ public extension ASTableView
 		this.animateOnDataRefresh = animate
 		return this
 	}
+
+    func canScroll(_ canScroll: Bool = true) -> Self {
+        var this = self
+        this.canScroll = canScroll
+        return this
+    }
 }
 
 // MARK: ASTableView specific header modifiers
