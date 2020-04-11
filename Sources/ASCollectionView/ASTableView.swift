@@ -201,7 +201,6 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 			assignIfChanged(tableView, \.showsVerticalScrollIndicator, newValue: parent.scrollIndicatorEnabled)
 			assignIfChanged(tableView, \.showsHorizontalScrollIndicator, newValue: parent.scrollIndicatorEnabled)
 			assignIfChanged(tableView, \.keyboardDismissMode, newValue: .onDrag)
-            assignIfChanged(tableView, \.bounces, newValue: !parent.blockOverScroll)
 
 			let isEditing = parent.editMode?.wrappedValue.isEditing ?? false
 			assignIfChanged(tableView, \.allowsSelection, newValue: isEditing)
@@ -584,6 +583,17 @@ public struct ASTableView<SectionID: Hashable>: UIViewControllerRepresentable, C
 
 		public func scrollViewDidScroll(_ scrollView: UIScrollView)
 		{
+            guard !parent.blockOverScroll else {
+                let offset = scrollView.contentOffset.y
+                if offset <= 0 {
+                    scrollView.isScrollEnabled = false
+                    scrollView.isScrollEnabled = true
+                }
+
+                parent.onScrollCallback?(scrollView.contentOffset, scrollView.contentSizePlusInsets)
+                checkIfReachedBottom(scrollView)
+                return
+            }
 			parent.onScrollCallback?(scrollView.contentOffset, scrollView.contentSizePlusInsets)
 			checkIfReachedBottom(scrollView)
 		}
